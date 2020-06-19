@@ -1,0 +1,99 @@
+#+TITLE: Ethereum python token transfer
+#+OPTIONS: ^:nil
+#+PROPERTY: header-args:sh :session *shell ethereum-python-token-transfer sh* :results silent raw
+#+PROPERTY: header-args:python :session *shell ethereum-python-token-transfer python* :results silent raw
+
+** System environment
+
+- Debian 9.11
+
+- Python 3.7.0
+
+Python modules:
+
+- web3==4.9.0
+
+** Imports
+
+#+BEGIN_SRC python
+import web3
+import json
+#+END_SRC
+
+** Init web3
+
+#+BEGIN_SRC python
+w3 = web3.Web3(web3.providers.rpc.HTTPProvider(rpc))
+w3.middleware_stack.inject(web3.middleware.geth_poa_middleware, layer=0)
+#+END_SRC
+
+** Parameters
+
+Node rpc.
+
+#+BEGIN_SRC python
+rpc = "http://127.0.0.1:8545/"
+#+END_SRC
+
+Owner address and unlock password.
+
+#+BEGIN_SRC python
+owner = "0x7f94B6537002C80596FBf0fcbE9d8fe7ad0C2345"
+unlockPassword = "qazwsx"
+#+END_SRC
+
+Contract address and ABI.
+
+#+BEGIN_SRC python
+contract_address = "0x41ff540f460e0fefda02c21e28f037b064abacd7"
+abi = json.loads(open("contract/abi.json", "rt").read())
+#+END_SRC
+
+Token buyer and amount.
+
+#+BEGIN_SRC python
+buyer = "0x6576B28C554D66cC8aDFaD3c7cc7e69b4a985BdC"
+amount = 1000000000
+#+END_SRC
+
+Convert addresses to checksum address.
+
+#+BEGIN_SRC python
+owner = web3.Web3.toChecksumAddress(owner)
+contract_address = web3.Web3.toChecksumAddress(contract_address)
+buyer = web3.Web3.toChecksumAddress(buyer)
+#+END_SRC
+
+** Unlock account
+
+#+BEGIN_SRC python
+w3.personal.unlockAccount(owner, unlockPassword)
+#+END_SRC
+
+** Init contract
+
+#+BEGIN_SRC python
+contract = w3.eth.contract(contract_address, abi=abi)
+#+END_SRC
+
+** Send create contract transaction
+
+#+BEGIN_SRC python
+txid = contract.functions.transfer(buyer, amount).transact({
+    'from': owner
+})
+txid.hex()
+#+END_SRC
+
+** Get sender balance
+
+#+BEGIN_SRC python
+contract.functions.balanceOf(owner).call()
+#+END_SRC
+
+** Get buyer balance
+
+#+BEGIN_SRC python
+contract.functions.balanceOf(buyer).call()
+#+END_SRC
+
